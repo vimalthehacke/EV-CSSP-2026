@@ -1,0 +1,8 @@
+{
+  "name": "Remix: EV Cyber Academy Labs",
+  "description": "Base System of EV Cyber Academy Labs featuring Username Auth with the Vimal master code, Cyberpunk HUD state tracking (Zustand + LocalStorage), a centralized XP Leveling Engine, and an interactive 16-Lab Roadmap dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

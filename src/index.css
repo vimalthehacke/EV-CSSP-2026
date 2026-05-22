@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Base custom definitions */
+body {
+  background-color: #050816;
+  color: #e5e7eb;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(0, 255, 136, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(0, 195, 255, 0.05) 0%, transparent 40%);
+}
+
+/* Custom visual styling helpers */
+.cyber-panel-border {
+  position: relative;
+  border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.cyber-panel-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #00ff88;
+  border-left: 2px solid #00ff88;
+}
+
+.cyber-panel-border::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid #00ff88;
+  border-right: 2px solid #00ff88;
+}
+
+/* Scanning matrix line effects */
+.matrix-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 255, 136, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 255, 136, 0.06) 1px, transparent 1px);
+}
+
+/* Cyber Terminal Scanlines */
+.scanlines {
+  position: relative;
+}
+
+.scanlines::after {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 9999;
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+/* Neon glow classes */
+.shadow-neon-green {
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.15);
+}
+
+.shadow-neon-blue {
+  box-shadow: 0 0 15px rgba(0, 195, 255, 0.15);
+}
+
+.shadow-neon-pink {
+  box-shadow: 0 0 15px rgba(255, 59, 95, 0.15);
+}
+
+/* Animations */
+@keyframes cyber-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.9; }
+}
+
+.animate-cyber-pulse {
+  animation: cyber-pulse 2s infinite;
+}
+
+/* Webkit Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050816;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1f2937;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00ff88;
+}
+
+/* Custom Sonner style overrides */
+.sonner-toast-override {
+  background-color: #111827 !important;
+  border: 1px solid #00ff88 !important;
+  color: #00ff88 !important;
+  font-family: var(--font-mono) !important;
+}
