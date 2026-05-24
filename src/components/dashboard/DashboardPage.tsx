@@ -25,6 +25,7 @@ import {
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
 import { LabEngine } from '../roadmap/LabEngine';
+import { CompletionSummary } from './CompletionSummary';
 
 interface DashboardPageProps {
   setRoute: (route: string) => void;
@@ -291,6 +292,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setRoute }) => {
           </Card>
         </motion.div>
       </motion.div>
+
+      {/* Persistent dynamic Completion Summary dashboard section */}
+      <CompletionSummary />
 
       {/* Grid Row 2: Roadmap Syllabus Preview (3 Labs) & Achievements section (with custom interactive unlock elements) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
