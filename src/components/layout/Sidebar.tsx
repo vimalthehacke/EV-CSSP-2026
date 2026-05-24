@@ -1,6 +1,7 @@
 import React from 'react';
 import { useProgressStore } from '../../store/progressStore';
 import { useXPStore } from '../../store/xpStore';
+import { playCpsClick, playCpsHover } from '../../lib/audioEngine';
 import { LayoutDashboard, Compass, ShieldAlert, Cpu } from 'lucide-react';
 
 interface SidebarProps {
@@ -27,6 +28,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRoute, setRoute }) => {
     },
   ];
 
+  const handleSetRoute = (id: string) => {
+    playCpsClick(false);
+    setRoute(id);
+  };
+
   return (
     <aside className="hidden md:flex flex-col w-64 bg-[#0a0f19] border-r border-gray-900 h-[calc(100vh-4rem)] p-5 justify-between flex-shrink-0 select-none">
       {/* Primary menu items */}
@@ -42,9 +48,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRoute, setRoute }) => {
             return (
               <button
                 key={item.id}
-                onClick={() => setRoute(item.id)}
+                onClick={() => handleSetRoute(item.id)}
+                onMouseEnter={() => playCpsHover()}
                 className={`
-                  w-full text-left rounded-md p-3 font-mono transition-all duration-150 relative overflow-hidden group
+                  w-full text-left rounded-md p-3 font-mono transition-all duration-150 relative overflow-hidden group cursor-pointer
                   ${isActive 
                     ? 'bg-[#00ff88]/5 border border-[#00ff88]/30 shadow-neon-green/10 text-white' 
                     : 'text-gray-400 hover:text-white border border-transparent hover:bg-gray-900/45 hover:border-gray-800'
@@ -95,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRoute, setRoute }) => {
         {/* Brand note */}
         <div className="text-[9px] font-mono text-gray-600 block leading-tight text-center">
           &bull; EV Cyber Academy &bull; <br />
-          Core Kernel build v26.5
+          Developed by <span className="text-[#00ff88]">vimalthehacker</span>
         </div>
       </div>
     </aside>

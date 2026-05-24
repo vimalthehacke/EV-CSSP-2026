@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useXPStore } from '../../store/xpStore';
+import { useSettingsStore } from '../../store/settingsStore';
 import { getLevelDetail } from '../../lib/xp-engine';
-import { LogOut, Terminal, Award, User as UserIcon } from 'lucide-react';
+import { getAmbientDroneDataUri, playCpsClick } from '../../lib/audioEngine';
+import { LogOut, Terminal, Award, User as UserIcon, Volume2, VolumeX, Sliders } from 'lucide-react';
 import { Button } from '../ui/Button';
 
 interface NavbarProps {
@@ -14,6 +16,48 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, setRoute }) => {
   const { user, logout } = useAuthStore();
   const { xp } = useXPStore();
   const levelDetail = getLevelDetail(xp);
+
+  // Settings Zustand state
+  const { soundEffectsEnabled, volume, toggleSoundEffects, setVolume } = useSettingsStore();
+
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Programmatically generate WAV audio drone URL offline
+  const ambientDroneSrc = React.useMemo(() => getAmbientDroneDataUri(), []);
+
+  // Sync ambient audio properties with user's settings store
+  useEffect(() => {
+    const playAudio = async () => {
+      if (!audioRef.current) return;
+      
+      try {
+        if (soundEffectsEnabled) {
+          audioRef.current.volume = volume * 0.45; // softer backdrop level
+          if (audioRef.current.paused) {
+            await audioRef.current.play();
+          }
+        } else {
+          audioRef.current.pause();
+        }
+      } catch (err) {
+        // Autoplay policy blocker (will resolve once user interacts with page)
+      }
+    };
+
+    playAudio();
+  }, [soundEffectsEnabled, volume, ambientDroneSrc]);
+
+  // Handle interaction click sound on volume changes
+  const handleToggleMute = () => {
+    playCpsClick(false);
+    toggleSoundEffects();
+  };
+
+  const handleVolumeSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVol = parseFloat(e.target.value);
+    setVolume(newVol);
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#050816]/90 border-b border-gray-900 backdrop-blur-md">
@@ -28,8 +72,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, setRoute }) => {
             <span className="font-display font-black text-sm tracking-widest text-white uppercase block select-none">
               EV CYBER ACADEMY <span className="text-[#00ff88] font-mono font-bold text-xs">LABS</span>
             </span>
-            <span className="text-[9px] text-gray-500 font-mono block tracking-wider uppercase select-none">
-              FOUNDER: VIMAL &bull; PHASE_1_SECURE
+            <span className="text-[9px] text-[#00ff88] font-mono block tracking-wider uppercase select-none">
+              Developed by vimalthehacker
             </span>
           </div>
         </div>
@@ -73,6 +117,51 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, setRoute }) => {
                 <div className="text-[8px] font-mono text-emerald-400">ACTIVE_OPERATOR</div>
               </div>
             </div>
+
+            {/* Global Synthesized Audio Console */}
+            <div className="flex items-center gap-2 border-l border-r border-gray-900 px-3 h-8">
+              <button
+                type="button"
+                onClick={handleToggleMute}
+                className={`p-1.5 rounded transition-all hover:bg-gray-900 flex items-center justify-center cursor-pointer ${
+                  soundEffectsEnabled ? 'text-[#00ff88]' : 'text-gray-500'
+                }`}
+                title={soundEffectsEnabled ? 'Mute Ambient Sound' : 'Unmute Ambient Sound'}
+              >
+                {soundEffectsEnabled ? (
+                  <Volume2 className="w-4 h-4 text-[#00ff88]" />
+                ) : (
+                  <VolumeX className="w-4 h-4 text-rose-500/80" />
+                )}
+              </button>
+
+              {soundEffectsEnabled && (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={volume}
+                    onChange={handleVolumeSliderChange}
+                    className="w-12 sm:w-16 h-1 rounded-full bg-gray-950 accent-[#00ff88] cursor-pointer"
+                    title={`Master Volume: ${Math.round(volume * 100)}%`}
+                  />
+                  <span className="text-[9px] font-mono text-gray-500 w-6 text-right hidden sm:inline">
+                    {Math.round(volume * 100)}%
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Offline loopable background drone synthesizer */}
+            <audio
+              ref={audioRef}
+              src={ambientDroneSrc}
+              loop
+              autoPlay={soundEffectsEnabled}
+              className="hidden"
+            />
 
             {/* Logout button */}
             <Button

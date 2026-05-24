@@ -4,6 +4,7 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
+import { playCpsHover, playCpsClick } from '../../lib/audioEngine';
 import { 
   Lock, 
   Unlock, 
@@ -21,6 +22,20 @@ import { LabEngine } from './LabEngine';
 export const RoadmapPage: React.FC = () => {
   const { labs, completedLabs } = useProgressStore();
   const [activeLabDetail, setActiveLabDetail] = useState<any>(null);
+
+  // Helper mapping list matching categories to their generated cyberpunk visual indicators
+  const getCategoryImgUrl = (category: string) => {
+    switch (category) {
+      case 'Reconnaissance': return '/src/assets/images/icon_recon_1779629177386.png';
+      case 'Web Exploitation': return '/src/assets/images/icon_web_1779629196705.png';
+      case 'Reverse Engineering': return '/src/assets/images/icon_reverse_1779629215553.png';
+      case 'Cryptography': return '/src/assets/images/icon_crypto_1779629232434.png';
+      case 'Privilege Escalation': return '/src/assets/images/icon_privesc_1779629251104.png';
+      case 'Network Attack': return '/src/assets/images/icon_network_1779629272659.png';
+      default: return '';
+    }
+  };
+
 
   // Statistics calculation for the header indicators
   const totalLabsCount = labs.length;
@@ -136,6 +151,9 @@ export const RoadmapPage: React.FC = () => {
               key={lab.id}
               variants={cardVariants}
               whileHover={isLocked ? {} : { y: -3 }}
+              onMouseEnter={() => {
+                if (!isLocked) playCpsHover();
+              }}
               className="h-full flex flex-col"
             >
               <Card
@@ -151,10 +169,23 @@ export const RoadmapPage: React.FC = () => {
 
                 {/* Card Head */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-start gap-2">
-                    <span className="font-mono text-xs font-black text-gray-500">
-                      LAB_0{lab.id}
-                    </span>
+                  <div className="flex justify-between items-center gap-2 border-b border-gray-900 pb-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {/* Premium visual high-tech custom icon representation of lab category */}
+                      <div className={`relative w-6 h-6 rounded border overflow-hidden flex items-center justify-center shrink-0 transition-all
+                        ${isLocked ? 'border-gray-800 opacity-40 grayscale' : 'border-[#00ff88]/40 bg-[#00ff88]/5 shadow-sm shadow-[#00ff88]/5'}
+                      `}>
+                        <img 
+                          src={getCategoryImgUrl(lab.category)} 
+                          alt={lab.category}
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover select-none"
+                        />
+                      </div>
+                      <span className="font-mono text-xs font-black text-gray-500">
+                        LAB_0{lab.id}
+                      </span>
+                    </div>
                     
                     {/* Visual indicators */}
                     <div className="flex gap-1">
@@ -223,7 +254,10 @@ export const RoadmapPage: React.FC = () => {
                       size="sm"
                       className="px-3 py-1.5"
                       leftIcon={<Play className="w-3.5 h-3.5 text-[#00ff88]" />}
-                      onClick={() => setActiveLabDetail(lab)}
+                      onClick={() => {
+                        playCpsClick(false);
+                        setActiveLabDetail(lab);
+                      }}
                     >
                       LAUNCH
                     </Button>
@@ -238,7 +272,10 @@ export const RoadmapPage: React.FC = () => {
       {/* Lab Simulation Modal */}
       <Modal
         isOpen={!!activeLabDetail}
-        onClose={() => setActiveLabDetail(null)}
+        onClose={() => {
+          playCpsClick(false);
+          setActiveLabDetail(null);
+        }}
         title={`SECURE TARGET LINK // LAB 0${activeLabDetail?.id}`}
         subtitle={`HOST: laboratory_console_${activeLabDetail?.id}@ev.cyber.range`}
         variant="blue"

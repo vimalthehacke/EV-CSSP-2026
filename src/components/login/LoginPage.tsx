@@ -59,11 +59,11 @@ export const LoginPage: React.FC = () => {
               <ShieldAlert className="w-3.5 h-3.5 animate-pulse" />
               <span>EV Security Shield Active</span>
             </div>
-            <h1 className="font-display font-black text-3xl sm:text-4xl text-white tracking-widest uppercase mb-1">
+            <h1 className="font-display font-black text-3xl sm:text-4xl text-[#00ff88] tracking-widest uppercase mb-1">
               EV CYBER ACADEMY
             </h1>
-            <h2 className="text-sm font-mono text-[#00ff88] font-semibold tracking-wider uppercase">
-              LABS GATEWAY &bull; VIMAL MENTOR
+            <h2 className="text-sm font-mono text-white font-semibold tracking-wider uppercase">
+              LABS GATEWAY &bull; DEVELOPED BY VIMALTHEHACKER
             </h2>
           </div>
 
@@ -158,13 +158,15 @@ export const LoginPage: React.FC = () => {
           </Card>
 
           {/* Diagnostic terminal status feedback */}
-          <div className="mt-6 flex justify-between items-center px-2 font-mono text-[9px] text-gray-500">
-            <span className="flex items-center gap-1">
-              <Cpu className="w-3.5 h-3.5 animate-spin [animation-duration:10s]" />
-              LOADER_VER: 1.25
-            </span>
-            <span>IP: 127.0.0.1</span>
-            <span>CONN: LOCAL_IFRAME</span>
+          <div className="mt-6 flex flex-col items-center gap-1.5 font-mono text-[9px] text-gray-500">
+            <div className="flex justify-between w-full px-2">
+              <span className="flex items-center gap-1">
+                <Cpu className="w-3.5 h-3.5 animate-spin [animation-duration:10s]" />
+                SYS_VER: 1.25
+              </span>
+              <span>DEV: vimalthehacker</span>
+              <span>CONN: SECURE_NET</span>
+            </div>
           </div>
 
         </motion.div>

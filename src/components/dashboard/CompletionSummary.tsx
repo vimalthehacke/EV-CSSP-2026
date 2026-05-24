@@ -23,20 +23,21 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
+import { playCpsHover, playCpsClick } from '../../lib/audioEngine';
 
 export const CompletionSummary: React.FC = () => {
   const { labs, completedLabs, resetProgress } = useProgressStore();
   const { logout } = useAuthStore();
   const [hoveredCategory, setHoveredCategory] = useState<LabCategory | null>(null);
 
-  // Define categories with styling metadata
-  const categories: { label: string; key: LabCategory; color: string; shortLabel: string; icon: any }[] = [
-    { label: 'Reconnaissance', key: 'Reconnaissance', color: '#00ff88', shortLabel: 'RECON', icon: Terminal },
-    { label: 'Web Exploitation', key: 'Web Exploitation', color: '#00c3ff', shortLabel: 'WEB_EXP', icon: Globe },
-    { label: 'Reverse Engineering', key: 'Reverse Engineering', color: '#ff3b5f', shortLabel: 'REV_ENG', icon: Cpu },
-    { label: 'Cryptography', key: 'Cryptography', color: '#ffb300', shortLabel: 'CRYPTO', icon: Key },
-    { label: 'Privilege Escalation', key: 'Privilege Escalation', color: '#a855f7', shortLabel: 'PRIV_ESC', icon: Shield },
-    { label: 'Network Attack', key: 'Network Attack', color: '#3b82f6', shortLabel: 'NET_ATK', icon: Zap },
+  // Define categories with styling metadata and custom generated vector assets
+  const categories: { label: string; key: LabCategory; color: string; shortLabel: string; icon: any; imgUrl: string }[] = [
+    { label: 'Reconnaissance', key: 'Reconnaissance', color: '#00ff88', shortLabel: 'RECON', icon: Terminal, imgUrl: '/src/assets/images/icon_recon_1779629177386.png' },
+    { label: 'Web Exploitation', key: 'Web Exploitation', color: '#00c3ff', shortLabel: 'WEB_EXP', icon: Globe, imgUrl: '/src/assets/images/icon_web_1779629196705.png' },
+    { label: 'Reverse Engineering', key: 'Reverse Engineering', color: '#ff3b5f', shortLabel: 'REV_ENG', icon: Cpu, imgUrl: '/src/assets/images/icon_reverse_1779629215553.png' },
+    { label: 'Cryptography', key: 'Cryptography', color: '#ffb300', shortLabel: 'CRYPTO', icon: Key, imgUrl: '/src/assets/images/icon_crypto_1779629232434.png' },
+    { label: 'Privilege Escalation', key: 'Privilege Escalation', color: '#a855f7', shortLabel: 'PRIV_ESC', icon: Shield, imgUrl: '/src/assets/images/icon_privesc_1779629251104.png' },
+    { label: 'Network Attack', key: 'Network Attack', color: '#3b82f6', shortLabel: 'NET_ATK', icon: Zap, imgUrl: '/src/assets/images/icon_network_1779629272659.png' },
   ];
 
   // Calculate live stats for each category
@@ -102,6 +103,7 @@ export const CompletionSummary: React.FC = () => {
 
   // Safe reset of only lab parameters
   const handlePurgeLabs = () => {
+    playCpsClick(false);
     if (confirm("🚨 PURGE ALL LABS:\nAre you sure you want to lock all laboratories, clear solved tasks logs, and reset XP to 0?\nNote: Your active username is preserved.")) {
       resetProgress();
       toast.success("LAB_DESTRUCTION_SUCCESS: All cybersecurity sandbox systems have been wiped and re-locked.", {
@@ -113,6 +115,7 @@ export const CompletionSummary: React.FC = () => {
 
   // Purge entire application state (Factory reset)
   const handlePurgeWebsite = () => {
+    playCpsClick(false);
     if (confirm("💀 TOTAL DESTRUCTION (FACTORY RESET):\nThis will completely purge all browser local storage including your username, password credentials, level histories, and metrics.\n\nYou will be logged out and the page will reload to factory conditions. Proceed?")) {
       try {
         localStorage.clear();
@@ -132,6 +135,7 @@ export const CompletionSummary: React.FC = () => {
 
   // Purge user, progress, XP, credentials, and reload to start fresh
   const handlePurgeUser = () => {
+    playCpsClick(false);
     if (confirm("🚨 PURGE USER & FULL DATABASE RESET:\nThis will completely purge your active user profile, solved labs history, XP milestones, and browser memory.\n\nYou will be logged out and start the academy from scratch as if visiting for the very first time. Continue?")) {
       try {
         localStorage.clear();
@@ -280,7 +284,10 @@ export const CompletionSummary: React.FC = () => {
               return (
                 <g 
                   key={idx}
-                  onMouseEnter={() => setHoveredCategory(point.key)}
+                  onMouseEnter={() => {
+                    setHoveredCategory(point.key);
+                    playCpsHover();
+                  }}
                   onMouseLeave={() => setHoveredCategory(null)}
                   className="cursor-pointer"
                 >
@@ -336,7 +343,10 @@ export const CompletionSummary: React.FC = () => {
                   className="font-mono tracking-wide"
                   style={{ textShadow: isHovered ? '0 0 8px rgba(0,255,136,0.3)' : 'none' }}
                   textAnchor={textAnchor}
-                  onMouseEnter={() => setHoveredCategory(cat.key)}
+                  onMouseEnter={() => {
+                    setHoveredCategory(cat.key);
+                    playCpsHover();
+                  }}
                   onMouseLeave={() => setHoveredCategory(null)}
                 >
                   {cat.shortLabel}
@@ -371,7 +381,6 @@ export const CompletionSummary: React.FC = () => {
 
           <div className="grid grid-cols-1 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
             {categoryData.map((data) => {
-              const Icon = data.icon;
               const isHovered = hoveredCategory === data.key;
               const totalLabsCount = data.totalCount;
               const completedLabsCount = data.completedCount;
@@ -379,7 +388,10 @@ export const CompletionSummary: React.FC = () => {
               return (
                 <div
                   key={data.key}
-                  onMouseEnter={() => setHoveredCategory(data.key)}
+                  onMouseEnter={() => {
+                    setHoveredCategory(data.key);
+                    playCpsHover();
+                  }}
                   onMouseLeave={() => setHoveredCategory(null)}
                   className={`
                     p-2 border rounded transition-all duration-200 cursor-pointer flex items-center justify-between
@@ -392,15 +404,21 @@ export const CompletionSummary: React.FC = () => {
                   `}
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div className={`p-1.5 rounded border
+                    {/* Beautiful custom vector icon visual indicator */}
+                    <div className={`relative w-8 h-8 rounded border overflow-hidden flex items-center justify-center shrink-0 transition-colors
                       ${isHovered 
-                        ? 'bg-[#00ff88]/10 border-[#00ff88]/30 text-[#00ff88]' 
+                        ? 'border-[#00ff88]/65 bg-[#00ff88]/5 shadow-neon-green/10' 
                         : completedLabsCount === totalLabsCount && totalLabsCount > 0
-                          ? 'bg-emerald-950/20 border-emerald-900/40 text-[#00ff88]'
-                          : 'bg-gray-900 border-gray-800 text-gray-400'
+                          ? 'border-[#00ff88]/30 bg-[#00ff88]/5'
+                          : 'border-gray-805 bg-gray-900/60'
                       }
                     `}>
-                      <Icon className="w-3.5 h-3.5" />
+                      <img 
+                        src={data.imgUrl} 
+                        alt={data.label} 
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover select-none"
+                      />
                     </div>
                     
                     <div className="min-w-0 flex-1">
