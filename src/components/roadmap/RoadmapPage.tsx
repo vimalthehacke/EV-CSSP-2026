@@ -14,14 +14,23 @@ import {
   ShieldAlert, 
   Clock, 
   BookOpen,
-  Compass
+  Compass,
+  RotateCcw
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { LabEngine } from './LabEngine';
+import { toast } from 'sonner';
 
 export const RoadmapPage: React.FC = () => {
-  const { labs, completedLabs } = useProgressStore();
+  const { labs, completedLabs, resetLab } = useProgressStore();
   const [activeLabDetail, setActiveLabDetail] = useState<any>(null);
+
+  const handleResetClick = (labId: number, labTitle: string) => {
+    if (confirm(`Reset and redeploy ${labTitle}? This will wipe your task progress & file updates so you can practice again.`)) {
+      resetLab(labId);
+      toast.success(`LAB_PROGRESS_RESET: "${labTitle}" has been fully redeployed!`);
+    }
+  };
 
   // Helper mapping list matching categories to their generated cyberpunk visual indicators
   const getCategoryImgUrl = (category: string) => {
@@ -232,36 +241,63 @@ export const RoadmapPage: React.FC = () => {
                 </div>
 
                 {/* Card Foot controls */}
-                <div className="mt-4 pt-3 border-t border-gray-900 flex justify-between items-center z-20">
-                  <span className="font-mono text-xs">
+                <div className="mt-4 pt-3 border-t border-gray-900 flex justify-between items-center z-20 gap-2">
+                  <span className="font-mono text-xs shrink-0">
                     <span className="text-gray-500 block text-[8px] uppercase font-bold tracking-tight">reap:</span>
                     <span className={`${isLocked ? 'text-gray-600' : 'text-[#00ff88]'} font-bold`}>
                       +{lab.xpReward} XP
                     </span>
                   </span>
 
-                  {isCompleted ? (
-                    <Badge variant="green" size="sm" className="opacity-80 py-1">
-                      COMPLETED
-                    </Badge>
-                  ) : isLocked ? (
-                    <span className="px-2.5 py-1 text-[10px] font-mono font-bold uppercase text-gray-600 bg-gray-950 rounded border border-transparent select-none">
-                      ENCRYPTED
-                    </span>
-                  ) : (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="px-3 py-1.5"
-                      leftIcon={<Play className="w-3.5 h-3.5 text-[#00ff88]" />}
-                      onClick={() => {
-                        playCpsClick(false);
-                        setActiveLabDetail(lab);
-                      }}
-                    >
-                      LAUNCH
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {!isLocked && (
+                      <button
+                        onClick={() => handleResetClick(lab.id, lab.title)}
+                        className="flex items-center gap-1 px-2 py-1.5 text-[10.5px] text-red-400 hover:text-red-300 border border-red-950/40 hover:border-red-500/30 bg-red-950/10 active:bg-[#ef4444]/10 rounded font-mono font-bold transition-all cursor-pointer"
+                        title="Reset & Redeploy current Lab"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        RESET
+                      </button>
+                    )}
+
+                    {isCompleted ? (
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="green" size="sm" className="opacity-80 py-1 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-[#00ff88]" />
+                          SOLVED
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="px-2.5 py-1 text-[11px] font-bold"
+                          onClick={() => {
+                            playCpsClick(false);
+                            setActiveLabDetail(lab);
+                          }}
+                        >
+                          OPEN
+                        </Button>
+                      </div>
+                    ) : isLocked ? (
+                      <span className="px-2.5 py-1 text-[10px] font-mono font-bold uppercase text-gray-600 bg-gray-950 rounded border border-transparent select-none">
+                        ENCRYPTED
+                      </span>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="px-3 py-1.5"
+                        leftIcon={<Play className="w-3.5 h-3.5 text-[#00ff88]" />}
+                        onClick={() => {
+                          playCpsClick(false);
+                          setActiveLabDetail(lab);
+                        }}
+                      >
+                        LAUNCH
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </Card>
             </motion.div>
@@ -276,10 +312,10 @@ export const RoadmapPage: React.FC = () => {
           playCpsClick(false);
           setActiveLabDetail(null);
         }}
-        title={`SECURE TARGET LINK // LAB 0${activeLabDetail?.id}`}
-        subtitle={`HOST: laboratory_console_${activeLabDetail?.id}@ev.cyber.range`}
-        variant="blue"
-        size="xl"
+        title={activeLabDetail ? `⚡ EV CYBER ACADEMY TARGET // LAB 0${activeLabDetail.id}: ${activeLabDetail.title}` : 'EV CYBER ACADEMY TARGET'}
+        subtitle={activeLabDetail ? `INSTANCE_ID: ev_node_0${activeLabDetail.id} // SECURE_CON: SSH_PORT_22 // DEVELOPED BY VIMALTHEHACKER` : ''}
+        variant="green"
+        size="xxl"
       >
         {activeLabDetail && (
           <LabEngine 

@@ -9,7 +9,7 @@ interface ModalProps {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   variant?: 'green' | 'blue' | 'pink';
 }
 
@@ -40,6 +40,7 @@ export const Modal: React.FC<ModalProps> = ({
       case 'md': return 'max-w-lg';
       case 'lg': return 'max-w-2xl';
       case 'xl': return 'max-w-4xl';
+      case 'xxl': return 'max-w-[96vw] w-[96vw] h-[92vh] flex flex-col';
     }
   };
 
@@ -91,7 +92,7 @@ export const Modal: React.FC<ModalProps> = ({
             exit={{ opacity: 0, scale: 0.93, y: 15 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
             className={`
-              relative w-full ${getSizeClass()} bg-[#0b0f19] rounded-lg border p-6 md:p-8
+              relative w-full ${getSizeClass()} bg-[#0b0f19] rounded-lg border ${size === 'xxl' ? 'p-4 md:p-5' : 'p-6 md:p-8'}
               ${styles.border} ${styles.glow} z-10 overflow-hidden
             `}
           >
@@ -129,7 +130,7 @@ export const Modal: React.FC<ModalProps> = ({
             </div>
 
             {/* Inner Content Area */}
-            <div className="text-gray-300">
+            <div className={`text-gray-300 ${size === 'xxl' ? 'flex-1 min-h-0 flex flex-col' : ''}`}>
               {children}
             </div>
           </motion.div>
