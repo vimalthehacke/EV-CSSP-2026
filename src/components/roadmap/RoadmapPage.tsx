@@ -241,26 +241,49 @@ export const RoadmapPage: React.FC = () => {
                   </span>
 
                   {isCompleted ? (
-                    <Badge variant="green" size="sm" className="opacity-80 py-1">
-                      COMPLETED
-                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <a
+                        href={`#sandbox=${lab.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => playCpsClick(false)}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#00ff88]/5 text-[#00ff88]/80 border border-[#00ff88]/20 hover:bg-[#00ff88]/15 text-[10px] font-mono font-black"
+                        title="Re-open solved lab workspace in separate tab"
+                      >
+                        REPLAY 🡕
+                      </a>
+                      <Badge variant="green" size="sm" className="opacity-80 py-1 font-mono font-bold">
+                        COMPLETED
+                      </Badge>
+                    </div>
                   ) : isLocked ? (
                     <span className="px-2.5 py-1 text-[10px] font-mono font-bold uppercase text-gray-600 bg-gray-950 rounded border border-transparent select-none">
                       ENCRYPTED
                     </span>
                   ) : (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="px-3 py-1.5"
-                      leftIcon={<Play className="w-3.5 h-3.5 text-[#00ff88]" />}
-                      onClick={() => {
-                        playCpsClick(false);
-                        setActiveLabDetail(lab);
-                      }}
-                    >
-                      LAUNCH
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          playCpsClick(false);
+                          setActiveLabDetail(lab);
+                        }}
+                        className="px-2.5 py-1 rounded border border-gray-800 hover:border-gray-700 bg-gray-900/50 hover:bg-gray-900 cursor-pointer text-gray-300 hover:text-white font-mono text-[10px] font-bold uppercase transition-all"
+                        title="Run lab workflow inside modal"
+                      >
+                        LAUNCH MODAL
+                      </button>
+                      <a
+                        href={`#sandbox=${lab.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => playCpsClick(false)}
+                        className="flex items-center gap-1 px-3 py-1 bg-[#00ff88]/15 text-[#00ff88] border border-[#00ff88]/40 hover:bg-[#00ff88]/25 rounded text-[11px] font-mono font-bold uppercase tracking-wide cursor-pointer transition-all shadow-sm shadow-[#00ff88]/10"
+                        title="Open full interactive workspace sandbox in a separate browser tab"
+                      >
+                        <Play className="w-2.5 h-2.5 text-[#00ff88] fill-current" />
+                        <span>OPEN TAB 🡕</span>
+                      </a>
+                    </div>
                   )}
                 </div>
               </Card>
@@ -279,7 +302,7 @@ export const RoadmapPage: React.FC = () => {
         title={`SECURE TARGET LINK // LAB 0${activeLabDetail?.id}`}
         subtitle={`HOST: laboratory_console_${activeLabDetail?.id}@ev.cyber.range`}
         variant="blue"
-        size="xl"
+        size="xxl"
       >
         {activeLabDetail && (
           <LabEngine 
