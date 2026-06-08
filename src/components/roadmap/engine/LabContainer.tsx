@@ -367,10 +367,10 @@ export const LabContainer: React.FC<LabContainerProps> = ({ lab, onClose }) => {
       ) : (
         
         /* 💻 DEPLOYED LAB INTERACTIVE WORKSPACE GRID */
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0 min-w-0 h-full" id="installed-sandbox-grid">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 flex-1 min-h-0 min-w-0 h-full" id="installed-sandbox-grid">
           
           {/* LEFT 65% PANEL: High-fidelity Linux operating system console / graphical viewport */}
-          <div className="xl:col-span-8 flex flex-col bg-[#080d15] border border-gray-800 rounded-xl overflow-hidden shadow-2xl min-h-[400px] xl:min-h-0 h-full">
+          <div className="md:col-span-8 flex flex-col bg-[#080d15] border border-gray-800 rounded-xl overflow-hidden shadow-2xl min-h-[400px] md:min-h-0 h-full">
             
             {/* Custom Kali OS Desktop Window Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-[#0c1221] border-b border-gray-900/80 shrink-0 select-none">
@@ -477,7 +477,7 @@ export const LabContainer: React.FC<LabContainerProps> = ({ lab, onClose }) => {
           </div>
 
           {/* RIGHT 35% SIDEBAR: Collapsible multi-tab training console Q&A and guide solutions */}
-          <div className="xl:col-span-4 flex flex-col bg-[#0a0f19]/90 border border-gray-850 rounded-xl overflow-hidden shadow-2xl min-h-[400px] xl:min-h-0 h-full">
+          <div className="md:col-span-4 flex flex-col bg-[#0a0f19]/90 border border-gray-850 rounded-xl overflow-hidden shadow-2xl min-h-[400px] md:min-h-0 h-full">
             
             {/* Sidebar high tech neon navigation tabs trigger row */}
             <div className="grid grid-cols-2 bg-[#0c1221] border-b border-gray-900/80 shrink-0 select-none">
