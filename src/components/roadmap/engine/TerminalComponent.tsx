@@ -38,7 +38,6 @@ export const TerminalComponent: React.FC<TerminalComponentProps> = ({
   
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [terminalFontSize, setTerminalFontSize] = useState(12);
 
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const terminalInputRef = useRef<HTMLInputElement>(null);
@@ -134,47 +133,15 @@ export const TerminalComponent: React.FC<TerminalComponentProps> = ({
   return (
     <div 
       onClick={focusTerminalInput}
-      style={{ fontSize: `${terminalFontSize}px` }}
-      className="flex-1 bg-black border border-gray-900 rounded-lg p-4 font-mono flex flex-col justify-between overflow-hidden relative cursor-text group h-full min-h-[350px] shadow-inner"
+      className="flex-1 bg-black border border-gray-900 rounded-lg p-4 font-mono text-[11px] flex flex-col justify-between overflow-hidden relative cursor-text group h-full shadow-inner"
     >
-      {/* Dynamic font size and status control headers */}
-      <div className="absolute top-2 right-2 flex items-center gap-2 bg-black/90 p-1 px-2.5 rounded border border-gray-800 font-mono text-[9px] select-none z-10 shadow-sm">
-        <div className="flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#00ff88] animate-pulse"></span>
-          <span className="text-gray-500 font-semibold tracking-wider">SHELL_ACTIVE</span>
-        </div>
-        <div className="w-[1px] h-3.5 bg-gray-850" />
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setTerminalFontSize(prev => Math.max(9, prev - 1));
-            }}
-            className="text-gray-400 hover:text-white hover:bg-gray-900 border border-transparent hover:border-gray-800 transition-colors w-4 h-4 rounded-sm flex items-center justify-center font-black cursor-pointer"
-            title="Decrease terminal font size"
-          >
-            -
-          </button>
-          <span className="text-[#00ff88] font-bold tracking-tight text-[10px] min-w-[24px] text-center">
-            {terminalFontSize}px
-          </span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setTerminalFontSize(prev => Math.min(22, prev + 1));
-            }}
-            className="text-gray-400 hover:text-white hover:bg-gray-900 border border-transparent hover:border-gray-800 transition-colors w-4 h-4 rounded-sm flex items-center justify-center font-black cursor-pointer"
-            title="Increase terminal font size"
-          >
-            +
-          </button>
-        </div>
+      <div className="absolute top-2 right-2 flex items-center gap-1.5 text-gray-600 bg-black/60 px-2.5 py-1 rounded border border-gray-950 font-mono text-[9px] select-none z-10">
+        <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse"></span>
+        ACTIVE CONSOLE // SHELL_OK
       </div>
 
       {/* Logs output console buffer */}
-      <div className="flex-1 overflow-y-auto space-y-1.5 pr-2 mb-3 min-h-0">
+      <div className="flex-1 overflow-y-auto space-y-1.5 pr-2 mb-3">
         {history.map((line, idx) => {
           let colorClass = 'text-gray-300';
           if (line.type === 'input') {
@@ -186,10 +153,10 @@ export const TerminalComponent: React.FC<TerminalComponentProps> = ({
           } else if (line.type === 'system') {
             colorClass = 'text-gray-500 italic';
           } else if (line.type === 'output') {
-            colorClass = 'text-gray-300 font-sans leading-relaxed whitespace-pre-wrap';
+            colorClass = 'text-gray-400 font-sans leading-relaxed text-[11.5px] whitespace-pre-wrap';
           }
           return (
-            <div key={idx} className={colorClass} style={{ fontSize: line.type === 'output' ? `${terminalFontSize + 0.5}px` : `${terminalFontSize}px` }}>
+            <div key={idx} className={colorClass}>
               {line.text}
             </div>
           );
@@ -199,7 +166,7 @@ export const TerminalComponent: React.FC<TerminalComponentProps> = ({
 
       {/* Interactive Command Prompt Form */}
       <form onSubmit={handleSubmit} className="flex items-center gap-1.5 pt-2 border-t border-gray-950">
-        <span className="text-[#00ff88] font-black whitespace-nowrap select-none" style={{ fontSize: `${terminalFontSize}px` }}>
+        <span className="text-[#00ff88] font-black whitespace-nowrap select-none">
           {terminalPrompt.replace('$', '')}:{currentDir}$
         </span>
         <input 
@@ -208,8 +175,7 @@ export const TerminalComponent: React.FC<TerminalComponentProps> = ({
           value={terminalInput}
           onChange={(e) => setTerminalInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          style={{ fontSize: `${terminalFontSize}px` }}
-          className="flex-1 bg-transparent text-white border-none focus:outline-none focus:ring-0 p-0 caret-[#00ff88] font-bold font-mono"
+          className="flex-1 bg-transparent text-white border-none focus:outline-none focus:ring-0 p-0 text-xs caret-[#00ff88] font-bold font-mono"
           autoComplete="off"
           autoFocus
           placeholder="type command lines (ls, cd, pwd, touch, mkdir)..."

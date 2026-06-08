@@ -9,7 +9,7 @@ interface ModalProps {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'xxl' | 'full';
   variant?: 'green' | 'blue' | 'pink';
 }
 
@@ -40,7 +40,8 @@ export const Modal: React.FC<ModalProps> = ({
       case 'md': return 'max-w-lg';
       case 'lg': return 'max-w-2xl';
       case 'xl': return 'max-w-4xl';
-      case 'xxl': return 'max-w-[96vw] w-[96vw] h-[92vh] flex flex-col';
+      case 'xxl': return 'max-w-7xl';
+      case 'full': return 'max-w-[98vw]';
     }
   };
 
@@ -75,7 +76,7 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 ${size === 'full' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
           {/* Backdrop Blur Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -92,7 +93,7 @@ export const Modal: React.FC<ModalProps> = ({
             exit={{ opacity: 0, scale: 0.93, y: 15 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
             className={`
-              relative w-full ${getSizeClass()} bg-[#0b0f19] rounded-lg border ${size === 'xxl' ? 'p-4 md:p-5' : 'p-6 md:p-8'}
+              relative w-full ${getSizeClass()} ${size === 'full' ? 'h-[94vh] max-h-[94vh] flex flex-col p-4 md:p-5' : 'p-6 md:p-8'} bg-[#0b0f19] rounded-lg border
               ${styles.border} ${styles.glow} z-10 overflow-hidden
             `}
           >
@@ -130,7 +131,7 @@ export const Modal: React.FC<ModalProps> = ({
             </div>
 
             {/* Inner Content Area */}
-            <div className={`text-gray-300 ${size === 'xxl' ? 'flex-1 min-h-0 flex flex-col' : ''}`}>
+            <div className={`text-gray-300 ${size === 'full' ? 'flex-1 min-h-0 overflow-hidden flex flex-col w-full h-full' : size === 'xxl' ? 'h-[75vh]' : ''}`}>
               {children}
             </div>
           </motion.div>

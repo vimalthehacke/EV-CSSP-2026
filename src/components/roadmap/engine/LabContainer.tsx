@@ -8,30 +8,8 @@ import { CompletionModal } from './CompletionModal';
 import { WebSimulator } from './WebSimulator';
 import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
-import { 
-  BookOpen, 
-  CheckCircle, 
-  Award, 
-  Target, 
-  HelpCircle, 
-  RotateCcw, 
-  ChevronDown, 
-  ChevronUp, 
-  Globe, 
-  Terminal as TerminalIcon,
-  Play,
-  Cpu,
-  Shield,
-  Layers,
-  ChevronRight,
-  RefreshCw,
-  Copy,
-  Check,
-  List,
-  Compass
-} from 'lucide-react';
+import { BookOpen, CheckCircle, Award, Target, HelpCircle, RotateCcw, ChevronDown, ChevronUp, Globe, Terminal as TerminalIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { playCpsClick, playCpsHover, playCpsSuccessFanfare, playCpsError } from '../../../lib/audioEngine';
 
 interface LabContainerProps {
   lab: Lab;
@@ -132,7 +110,6 @@ const getTaskHintAndSolution = (labId: number, taskId: number, task: Task) => {
   };
 };
 
-
 export const LabContainer: React.FC<LabContainerProps> = ({ lab, onClose }) => {
   const { labs, completedChallenges, completedTasks, completeTask, completeChallenge, resetTask, resetLab } = useProgressStore();
 
@@ -157,67 +134,6 @@ export const LabContainer: React.FC<LabContainerProps> = ({ lab, onClose }) => {
     return (lab.id >= 9) ? 'simulation' : 'terminal';
   });
 
-  // Sidebar Tabs state: 'qa' (Checklist & Flag) or 'guide' (Step-by-step Solutions)
-  const [activeSidebarTab, setActiveSidebarTab] = useState<'qa' | 'guide'>('qa');
-
-  // Realistic Kali Linux VM deployment simulator state
-  const [isDeploying, setIsDeploying] = useState(true);
-  const [deploymentProgress, setDeploymentProgress] = useState(0);
-  const [deploymentLogs, setDeploymentLogs] = useState<string[]>([]);
-
-  // Ticker system for booting logs
-  const triggerInstanceDeployment = () => {
-    setIsDeploying(true);
-    setDeploymentProgress(0);
-    setDeploymentLogs([]);
-    
-    const logs = [
-      `[sys/boot] ⚡ PREPARING SECURE CONTAINER FOR LAB TARGET 0x${lab.id.toString(16).toUpperCase()}`,
-      `[sys/sandbox] 🔒 CONTAINMENT: Injecting virtual machine isolated sandbox profiles...`,
-      `[sys/network] 🌐 NETWORK: Binding interface node ev_node_0${lab.id} @ tunnel vlan: 10.0.99.${20 + lab.id}`,
-      `[sys/disk] 💾 MOUNT: Attaching ephemeral virtual disk target /dev/loop_${lab.id}...`,
-      `[sys/kali] 🐉 OS: Spawning high-tech Kali Linux simulation daemon instance...`,
-      `[sys/tools] 🛠️ DEP: Injecting defensive analysis packages & command-line shells...`,
-      `[sys/env] 📦 SERVICES: Forwarding virtual GUI dashboard simulation client proxy to node port...`,
-      `[sys/ready] ✅ CONNECTION STACK ESTABLISHED! Deployed successfully. Welcome to Cyber Academy Range.`
-    ];
-
-    let currentLogIndex = 0;
-    const interval = setInterval(() => {
-      setDeploymentProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsDeploying(false);
-            try {
-              playCpsSuccessFanfare();
-            } catch (err) {}
-          }, 300);
-          return 100;
-        }
-
-        const nextLogTriggerPercent = Math.floor((currentLogIndex / logs.length) * 100);
-        if (prev >= nextLogTriggerPercent && currentLogIndex < logs.length) {
-          setDeploymentLogs(curr => [...curr, logs[currentLogIndex]]);
-          currentLogIndex++;
-        }
-
-        // Random increment for booting animation feel
-        return prev + Math.floor(Math.random() * 8) + 6;
-      });
-    }, 60);
-
-    return () => clearInterval(interval);
-  };
-
-  // Run deployment sequence whenever the lab ID changes
-  useEffect(() => {
-    const cancelDeploy = triggerInstanceDeployment();
-    return () => {
-      cancelDeploy?.();
-    };
-  }, [lab.id]);
-
   // Re-sync active tab when changing labs
   useEffect(() => {
     setActiveTab((lab.id >= 9) ? 'simulation' : 'terminal');
@@ -231,8 +147,10 @@ export const LabContainer: React.FC<LabContainerProps> = ({ lab, onClose }) => {
   }, [activeLab.completed]);
 
   const handleCommandExecution = (cmdStr: string) => {
+    // Check if entered command fulfills requirements of any inactive terminal tasks
     activeTasks.forEach(task => {
       if (task.type === 'terminal' && task.commandRequired && !task.completed) {
+        // Match exact or nested prefix
         if (cmdStr.trim().toLowerCase() === task.commandRequired.trim().toLowerCase()) {
           completeTask(lab.id, task.id);
           toast.success(`TASK_STATUS_UPDATE: solved "${task.title}" (+20 XP GRANTED)!`);
@@ -256,7 +174,6 @@ export const LabContainer: React.FC<LabContainerProps> = ({ lab, onClose }) => {
     if (confirm("Reset current Lab? This will clear all completed task steps, file modifications, and challenge states.")) {
       resetLab(lab.id);
       setTerminalResetCounter(prev => prev + 1);
-      setActiveSidebarTab('qa');
       toast.info("LAB_RESET: Reset completed. Fresh terminal environment mounted.");
     }
   };
@@ -271,16 +188,6 @@ export const LabContainer: React.FC<LabContainerProps> = ({ lab, onClose }) => {
     setActiveHintTaskId(prev => prev === taskId ? null : taskId);
   };
 
-  // For copy-paste solutions walkthrough
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const handleCopyCommandText = (commandText: string, idx: number) => {
-    navigator.clipboard.writeText(commandText);
-    setCopiedIndex(idx);
-    playCpsClick(true);
-    toast.success("COMMAND_CLIPBOARD: Solutions command copied!");
-    setTimeout(() => setCopiedIndex(null), 1500);
-  };
-
   // Filesystem defaults structure placeholder if not initialized
   const fsFiles = (lab as any).challenge.filesystem || {
     "note.txt": "Cyber Range Simulator active sandbox file boundaries. Read standard cues."
@@ -289,434 +196,208 @@ export const LabContainer: React.FC<LabContainerProps> = ({ lab, onClose }) => {
   const termPrompt = (lab as any).challenge.terminalPrompt || "operator@ev-cyber-range:~$";
 
   return (
-    <div className="flex flex-col gap-4 h-full min-h-0 text-gray-100 font-sans relative">
+    <div className="flex flex-row gap-4 w-full h-full overflow-hidden text-gray-100 bg-[#050816]/30">
       
-      {/* 💬 WHATSAPP COMMUNITY HELPLINE RIBBON */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-gradient-to-r from-emerald-950/45 to-teal-950/25 border border-emerald-500/20 rounded-lg p-3 px-4 shadow-[0_0_15px_rgba(0,255,136,0.03)] select-none">
-        <div className="flex items-center gap-2.5">
-          <div className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse shrink-0 shadow-[0_0_8px_rgba(0,255,136,0.8)]" />
-          <p className="font-mono text-xs text-emerald-400 font-bold tracking-tight text-center sm:text-left">
-            💡 DOUBT IRUKA ? COMMUNITY LA KELUNGA PAH !
-          </p>
+      {/* COLUMN 1: NAVIGATION / ROADMAP (Weighted Left Sidebar) */}
+      <div className="basis-[18%] min-w-[180px] max-w-[240px] flex-shrink-0 flex flex-col border-r border-gray-900 bg-[#0b0f19]/80 overflow-hidden font-mono text-[10px]">
+        <div className="p-3 border-b border-gray-900 bg-gray-950/40">
+          <span className="text-gray-500 font-bold block mb-1">SYSTEM_HIERARCHY</span>
+          <div className="text-[#00ff88] font-black truncate">EV_CYBER_RANGE_V1.0.4</div>
         </div>
-        <a 
-          href="https://chat.whatsapp.com/FfWQeWUeqwb2EcSfksPfk9" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          onClick={() => playCpsClick(true)}
-          className="flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-black font-sans text-[11px] font-black tracking-wide p-1.5 px-3.5 rounded-full transition-all shadow-[0_3px_10px_rgba(37,211,102,0.15)] shrink-0 cursor-pointer"
-        >
-          <span className="shrink-0 uppercase">JOIN WHATSAPP COMMUNITY GROUP 💬</span>
-        </a>
+        
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+          <div className="text-gray-500 font-bold px-2 py-1 uppercase tracking-tight mb-2 border-b border-gray-900/50">CURRICULUM_NODES</div>
+          {labs.map(l => (
+            <div 
+              key={l.id} 
+              className={`px-3 py-2 rounded border transition-all flex items-center justify-between gap-2
+                ${l.id === lab.id 
+                  ? 'bg-[#00ff88]/10 border-[#00ff88]/30 text-[#00ff88]' 
+                  : l.unlocked 
+                    ? 'border-transparent text-gray-400 hover:bg-gray-900/50 hover:text-gray-200' 
+                    : 'border-transparent text-gray-700 opacity-50'
+                }
+              `}
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span className={`w-1.5 h-1.5 rounded-full ${l.completed ? 'bg-[#00ff88]' : l.id === lab.id ? 'bg-[#00c3ff]' : 'bg-gray-700'}`} />
+                <span className="truncate">LAB_{l.id.toString().padStart(2, '0')}</span>
+              </div>
+              {l.completed && <CheckCircle className="w-3 h-3 text-[#00ff88]" />}
+            </div>
+          ))}
+        </div>
+
+        <div className="p-3 bg-gray-950/60 border-t border-gray-900 space-y-2">
+          <div className="flex justify-between items-center text-gray-500">
+            <span>UPTIME:</span>
+            <span className="text-white">12:44:02</span>
+          </div>
+          <div className="flex justify-between items-center text-gray-500">
+            <span>PACKETS:</span>
+            <span className="text-white animate-pulse">RX/TX_4K</span>
+          </div>
+        </div>
       </div>
 
-      {/* ⚠️ HIGH TECH VM INSTANCE BOOT DEPLOYMENT SCREEN */}
-      {isDeploying ? (
-        <div className="flex-1 min-h-[500px] flex flex-col items-center justify-center bg-[#070b13] border border-emerald-500/30 rounded-xl p-8 relative overflow-hidden select-none shadow-2xl">
-          {/* Cyber scanline decorations */}
-          <div className="absolute inset-x-0 top-0 h-[1px] bg-emerald-500/25 animate-scan" />
-          <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+      {/* COLUMN 2: CENTER WORKSPACE (Terminal / Simulator) */}
+      <div className="flex-1 min-w-0 flex flex-col space-y-3 h-full overflow-hidden py-2 px-1">
+        
+        {/* Tab Toggle Header for Labs 9 to 16 */}
+        {(lab.id >= 9) && (
+          <div className="flex bg-black/40 p-1 rounded-lg border border-gray-900 gap-1 shrink-0 select-none max-w-[400px]">
+            <button
+              onClick={() => setActiveTab('simulation')}
+              className={`flex-1 py-1.5 px-3 rounded-md font-mono text-[9px] font-bold uppercase transition-all duration-150 flex items-center justify-center gap-1.5
+                ${activeTab === 'simulation'
+                  ? 'bg-emerald-950/40 border border-[#00ff88]/30 text-[#00ff88]'
+                  : 'text-gray-500 hover:text-gray-300 border border-transparent'
+                }`}
+            >
+              <Globe className="w-3 h-3" />
+              <span>Web Simulation</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('terminal')}
+              className={`flex-1 py-1.5 px-3 rounded-md font-mono text-[9px] font-bold uppercase transition-all duration-150 flex items-center justify-center gap-1.5
+                ${activeTab === 'terminal'
+                  ? 'bg-emerald-950/40 border border-[#00ff88]/30 text-[#00ff88]'
+                  : 'text-gray-500 hover:text-gray-300 border border-transparent'
+                }`}
+            >
+              <TerminalIcon className="w-3 h-3" />
+              <span>Sandboxed Console</span>
+            </button>
+          </div>
+        )}
+
+        {/* Dynamic Display area containing terminal or web simulator */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-black/20 rounded-lg border border-gray-900/50 shadow-inner">
+          {activeTab === 'simulation' ? (
+            <WebSimulator labId={lab.id} />
+          ) : (
+            <TerminalComponent
+              labId={lab.id}
+              labFiles={fsFiles}
+              terminalPrompt={termPrompt}
+              activeTasks={activeTasks}
+              onCommandRun={handleCommandExecution}
+              resetCounter={terminalResetCounter}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* COLUMN 3: RIGHT PANEL (Instructions, Tasks, Challenge Box) */}
+      <div className="basis-[18%] min-w-[200px] max-w-[260px] flex-shrink-0 flex flex-col border-l border-gray-900 bg-[#0b0f19]/80 overflow-hidden py-2 px-3 space-y-4">
+        
+        {/* Lab Header Summary */}
+        <div className="space-y-3 shrink-0">
+          <div className="flex items-center justify-between">
+            <span className="text-[#00ff88] font-mono font-bold text-[10px] tracking-[0.2em]">MISSION_PARAMETERS</span>
+            <button
+              onClick={handleResetLabClick}
+              className="text-[9px] font-mono text-red-500/70 hover:text-red-400 bg-red-950/5 border border-red-900/20 px-2 py-0.5 rounded flex items-center gap-1"
+            >
+              <RotateCcw className="w-2.5 h-2.5" /> REBOOT
+            </button>
+          </div>
           
-          <div className="max-w-xl w-full text-center space-y-6 z-10">
-            {/* Pulsing high tech indicator */}
-            <div className="relative inline-flex items-center justify-center p-4 bg-emerald-950/40 border border-[#00ff88]/40 rounded-full animate-pulse shadow-md mb-2">
-              <Cpu className="w-8 h-8 text-[#00ff88]" />
-              <div className="absolute inset-0 border border-dotted border-emerald-400/20 rounded-full animate-spin-slow" />
+          <div className="bg-gray-950/50 p-3 rounded-lg border border-gray-900 space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge variant={lab.difficulty === 'Beginner' ? 'slate' : 'blue'} size="sm">
+                {lab.difficulty}
+              </Badge>
+              <h4 className="text-white font-display font-medium text-sm leading-tight line-clamp-1">{lab.title}</h4>
             </div>
-
-            <div className="space-y-2">
-              <h2 className="text-xl font-mono font-black uppercase text-[#00ff88] tracking-widest flex items-center justify-center gap-2">
-                <RefreshCw className="w-5 h-5 animate-spin" />
-                DEPLOYING LAB INSTANCE...
-              </h2>
-              <p className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
-                KALI LINUX CYBER RANGE CORE HYPERVISOR PROVISIONING // PORT: 3000
-              </p>
-            </div>
-
-            {/* Neon Ticker Progress indicator bar */}
-            <div className="space-y-1.5 font-mono">
-              <div className="flex justify-between items-center text-xs text-emerald-400">
-                <span>TUNNEL_ALLOCATION_PROGRESS</span>
-                <span className="font-bold">{deploymentProgress}%</span>
-              </div>
-              <div className="w-full bg-gray-950 rounded border border-emerald-950 h-3.5 p-0.5 overflow-hidden">
-                <div 
-                  className="bg-gradient-to-r from-emerald-600 to-[#00ff88] h-full rounded transition-all duration-100 ease-out shadow-[0_0_8px_rgba(0,255,136,0.5)]"
-                  style={{ width: `${deploymentProgress}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Scrolling boot execution logs */}
-            <div className="bg-black/90 rounded border border-gray-900 p-4 font-mono text-left text-[10.5px] text-emerald-500 h-[180px] overflow-y-auto space-y-1.5 custom-scrollbar shadow-inner select-text">
-              {deploymentLogs.map((log, index) => (
-                <div key={index} className="flex items-start gap-2 animate-fade-in">
-                  <span className="text-emerald-700 font-bold shrink-0">&gt;&gt;&gt;</span>
-                  <span className="leading-relaxed font-semibold">{log}</span>
-                </div>
-              ))}
-              <div className="animate-pulse text-emerald-400 inline-block font-black">█</div>
-            </div>
-
-            <p className="text-[10px] text-gray-500 font-mono italic">
-              Deploying secure sandboxed network loopback container safely. Please wait.
+            <p className="text-gray-400 text-[11px] leading-relaxed font-sans line-clamp-2">
+              {lab.description}
             </p>
           </div>
         </div>
-      ) : (
-        
-        /* 💻 DEPLOYED LAB INTERACTIVE WORKSPACE GRID */
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 flex-1 min-h-0 min-w-0 h-full" id="installed-sandbox-grid">
-          
-          {/* LEFT 65% PANEL: High-fidelity Linux operating system console / graphical viewport */}
-          <div className="md:col-span-8 flex flex-col bg-[#080d15] border border-gray-800 rounded-xl overflow-hidden shadow-2xl min-h-[400px] md:min-h-0 h-full">
-            
-            {/* Custom Kali OS Desktop Window Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-[#0c1221] border-b border-gray-900/80 shrink-0 select-none">
-              
-              {/* Window Controls Dots */}
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="w-3 h-3 rounded-full bg-red-500/80 hover:bg-red-500 border border-red-600/30 transition-all cursor-pointer" title="Close Workspace" onClick={() => { playCpsClick(false); onClose(); }} />
-                <span className="w-3 h-3 rounded-full bg-yellow-500/80 border border-yellow-600/30" />
-                <span className="w-3 h-3 rounded-full bg-green-500/80 border border-green-600/30" />
-                
-                {/* Simulated connection LED */}
-                <span className="ml-3 inline-flex items-center gap-1 text-[10px] font-mono text-emerald-400 font-bold tracking-wider bg-emerald-950/40 p-1 px-1.5 rounded border border-emerald-900/30">
-                  <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-ping shrink-0" />
-                  ONLINE: ev_node_0{lab.id}
-                </span>
-              </div>
 
-              {/* Window Address Bar Info representing connection routes */}
-              <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-black/50 border border-gray-850 rounded text-[10.5px] font-mono text-gray-400 w-1/3 max-w-sm overflow-hidden select-text text-center justify-center shrink-0">
-                <span className="text-[#00ff88]/70 font-semibold shrink-0">ev-kali://root@sandbox</span>
-                <span className="truncate opacity-60">10.0.99.{20+lab.id}</span>
-              </div>
+        {/* Scrollable Tasks and Instructions Area */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
+          <div className="space-y-3">
+            {activeTasks.map((task) => {
+              const isHintExpanded = activeHintTaskId === task.id;
+              const { hint, step } = getTaskHintAndSolution(lab.id, task.id, task);
 
-              {/* Option Selector controls to Switch Active Terminals */}
-              <div className="flex items-center gap-2 font-mono shrink-0">
-                
-                {/* Re-deploy target instance button */}
-                <button
-                  onClick={triggerInstanceDeployment}
-                  className="flex items-center gap-1 border border-emerald-900/50 hover:bg-emerald-950/20 text-[10px] px-2 py-1 text-emerald-400 hover:text-[#00ff88] font-bold rounded transition-all"
-                  title="Force redeployment of Kali sandboxed logs"
-                >
-                  <RefreshCw className="w-3 h-3 animate-spin-hover" />
-                  REDEPLOY
-                </button>
-
-                <button
-                  onClick={handleResetLabClick}
-                  className="hidden sm:flex items-center gap-1 border border-red-950 text-gray-400 hover:text-red-400 hover:bg-red-950/15 text-[10px] px-2 py-1 font-bold rounded transition-all"
-                  title="Wipe files & progress resets"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  RESET
-                </button>
-              </div>
-            </div>
-
-            {/* Inner Environment Toolbar (Switch Desktop Visual View) */}
-            <div className="bg-[#0a0f1b] p-2 border-b border-gray-900 flex items-center justify-between text-xs font-mono shrink-0 select-none">
-              <span className="text-gray-500 text-[10px] tracking-widest font-black uppercase flex items-center gap-1.5 ml-1">
-                <Layers className="w-3.5 h-3.5 text-blue-400" />
-                ENVIRONMENT DISPLAY RENDERER
-              </span>
-
-              {lab.id >= 9 ? (
-                <div className="flex bg-black/60 p-1 rounded border border-gray-850 gap-1">
-                  <button
-                    onClick={() => { setActiveTab('simulation'); playCpsClick(false); }}
-                    className={`p-1 px-3 text-[10.5px] font-bold rounded transition-colors flex items-center gap-1.5
-                      ${activeTab === 'simulation'
-                        ? 'bg-emerald-950/50 border border-[#00ff88]/30 text-[#00ff88]'
-                        : 'text-gray-500 hover:text-gray-300'
-                      }`}
-                  >
-                    <Globe className="w-3.5 h-3.5" />
-                    GUI Simulated Browser
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab('terminal'); playCpsClick(false); }}
-                    className={`p-1 px-3 text-[10.5px] font-bold rounded transition-colors flex items-center gap-1.5
-                      ${activeTab === 'terminal'
-                        ? 'bg-emerald-950/50 border border-[#00ff88]/30 text-[#00ff88]'
-                        : 'text-gray-500 hover:text-gray-300'
-                      }`}
-                  >
-                    <TerminalIcon className="w-3.5 h-3.5" />
-                    Kali Shell Console
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1 bg-black/30 p-1 px-2.5 border border-gray-850 rounded text-gray-400 text-[10.5px]">
-                  <TerminalIcon className="w-3.5 h-3.5 text-[#00ff88]" />
-                  <span>Interactive Terminal Emulator Only (No Graphics Required)</span>
-                </div>
-              )}
-            </div>
-
-            {/* Sandbox Container GUI Workspace viewport - scrollable and highly elastic */}
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar min-h-0 bg-black/25">
-              {activeTab === 'simulation' ? (
-                <WebSimulator labId={lab.id} />
-              ) : (
-                <TerminalComponent
-                  labId={lab.id}
-                  labFiles={fsFiles}
-                  terminalPrompt={termPrompt}
-                  activeTasks={activeTasks}
-                  onCommandRun={handleCommandExecution}
-                  resetCounter={terminalResetCounter}
-                />
-              )}
-            </div>
-
-          </div>
-
-          {/* RIGHT 35% SIDEBAR: Collapsible multi-tab training console Q&A and guide solutions */}
-          <div className="md:col-span-4 flex flex-col bg-[#0a0f19]/90 border border-gray-850 rounded-xl overflow-hidden shadow-2xl min-h-[400px] md:min-h-0 h-full">
-            
-            {/* Sidebar high tech neon navigation tabs trigger row */}
-            <div className="grid grid-cols-2 bg-[#0c1221] border-b border-gray-900/80 shrink-0 select-none">
-              
-              <button
-                onClick={() => { playCpsClick(false); setActiveSidebarTab('qa'); }}
-                className={`py-3 px-2 border-r border-gray-900 font-mono text-[11px] font-bold tracking-wider uppercase transition-all duration-150 flex items-center justify-center gap-1.5
-                  ${activeSidebarTab === 'qa'
-                    ? 'bg-emerald-950/30 text-white border-b-2 border-b-[#00ff88]'
-                    : 'text-gray-500 hover:text-gray-300 bg-black/10'
-                  }`}
-              >
-                <List className="w-4 h-4 text-[#00ff88]" />
-                QA CHALLENGES
-              </button>
-
-              <button
-                onClick={() => { playCpsClick(false); setActiveSidebarTab('guide'); }}
-                className={`py-3 px-2 font-mono text-[11px] font-bold tracking-wider uppercase transition-all duration-150 flex items-center justify-center gap-1.5
-                  ${activeSidebarTab === 'guide'
-                    ? 'bg-emerald-950/30 text-white border-b-2 border-b-[#00ff88]'
-                    : 'text-gray-500 hover:text-gray-300 bg-black/10'
-                  }`}
-              >
-                <Compass className="w-4 h-4 text-[#00ff88]" />
-                SOLUTIONS GUIDE 📖
-              </button>
-            </div>
-
-            {/* Sidebar content scroll container */}
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-5 flex flex-col justify-between" id="sidebar-tab-content">
-              
-              {/* TAB 1: QA AND STEP CHECKLISTS */}
-              {activeSidebarTab === 'qa' && (
-                <div className="space-y-4 flex flex-col justify-between h-full">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between bg-emerald-950/10 p-2.5 rounded border border-emerald-950/30 font-mono">
-                      <span className="text-[10.5px] font-black text-[#00ff88] uppercase tracking-wider flex items-center gap-1">
-                        <Target className="w-4 h-4" />
-                        CHECKPOINT MILSTONES
-                      </span>
-                      <span className="text-gray-400 text-[10px] font-bold">
-                        {activeTasks.filter(t => t.completed).length} / {activeTasks.length} PASSED
-                      </span>
+              return (
+                <div key={task.id} className="space-y-2 border border-gray-900 bg-gray-950/20 rounded-lg p-3">
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0 text-[10px]
+                        ${task.completed ? 'bg-emerald-500 border-emerald-400 text-black' : 'bg-gray-950 border-gray-800 text-gray-500'}
+                      `}>
+                        {task.completed ? '✓' : ''}
+                      </div>
+                      <span className={`font-bold text-[11px] truncate ${task.completed ? 'text-gray-500' : 'text-white'}`}>{task.title}</span>
                     </div>
-
-                    <div className="space-y-3.5">
-                      {activeTasks.map((task) => {
-                        const isHintExpanded = activeHintTaskId === task.id;
-                        const { hint, step } = getTaskHintAndSolution(lab.id, task.id, task);
-
-                        return (
-                          <div 
-                            key={task.id} 
-                            className={`border rounded-lg p-3 transition-all duration-200 bg-gray-950/30
-                              ${task.completed 
-                                ? 'border-emerald-500/20 bg-emerald-950/5' 
-                                : 'border-gray-900 hover:border-gray-800'
-                              }`}
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 font-mono text-[10.5px] font-bold
-                                  ${task.completed
-                                    ? 'bg-emerald-950 border-[#00ff88] text-[#00ff88]'
-                                    : 'bg-black/40 border-gray-800 text-gray-500'
-                                  }`}
-                                >
-                                  {task.completed ? '✓' : task.id}
-                                </div>
-                                <h4 className="font-semibold text-xs text-white leading-tight font-sans truncate">{task.title}</h4>
-                              </div>
-                              
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <button
-                                  onClick={() => { playCpsClick(false); toggleHintDrawer(task.id); }}
-                                  className={`p-1 px-2 border rounded text-[9.5px] font-mono leading-none tracking-tight font-bold transition-all
-                                    ${isHintExpanded
-                                      ? 'border-blue-500/40 text-blue-400 bg-blue-950/20'
-                                      : 'border-gray-850 text-gray-500 hover:text-white'
-                                    }`}
-                                >
-                                  HINT
-                                </button>
-                                {task.completed && (
-                                  <button
-                                    onClick={() => handleResetTaskClick(task.id, task.title)}
-                                    className="p-1 border border-gray-900 text-gray-500 hover:text-red-400 hover:bg-red-950/20 hover:border-red-900/30 rounded transition-all"
-                                    title="Reset checkpoint state"
-                                  >
-                                    <RotateCcw className="w-2.5 h-2.5" />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Collapsible Hints drawer */}
-                            {isHintExpanded && (
-                              <div className="mt-2.5 bg-blue-950/10 border border-blue-500/15 p-2.5 rounded font-sans text-xs space-y-2 animate-fade-in text-[11px] leading-relaxed">
-                                <div className="space-y-0.5">
-                                  <span className="text-[9px] font-bold text-blue-400 font-mono block uppercase tracking-wider">// CYBER SEC RANGE CUE:</span>
-                                  <p className="text-gray-300">{hint}</p>
-                                </div>
-                                <div className="border-t border-blue-500/10 pt-1.5 space-y-1">
-                                  <span className="text-[9px] font-bold text-[#00ff88] font-mono block uppercase tracking-wider">// EXPLICIT NEXT COMMAND:</span>
-                                  <code className="text-gray-400 bg-black/60 p-1 px-1.5 rounded block select-text font-mono text-[10px] border border-gray-900">
-                                    {step}
-                                  </code>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Task Renderer Component */}
-                            <div className="mt-3">
-                              {task.completed ? (
-                                <div className="text-[11px] font-mono text-gray-500 bg-emerald-950/5 p-2 rounded border border-emerald-950/10 leading-relaxed font-sans">
-                                  <span className="text-emerald-400 uppercase font-black text-[9px] block mb-0.5">// STEP COMPLETED</span>
-                                  {task.description}
-                                </div>
-                              ) : (
-                                <TaskRenderer 
-                                  task={task} 
-                                  onComplete={() => handleTaskSolved(task.id)} 
-                                  disabled={isLabFullyCompleted}
-                                />
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <button
+                      onClick={() => toggleHintDrawer(task.id)}
+                      className={`text-[9px] font-mono font-bold px-1.5 py-0.5 border rounded cursor-pointer ${isHintExpanded ? 'bg-cyan-950 border-cyan-500 text-cyan-400' : 'border-gray-800 text-gray-500 hover:text-white'}`}
+                    >
+                      HINT
+                    </button>
                   </div>
 
-                  {/* Redundant Submit Sandbox Level Flags */}
-                  <div className="pt-4 border-t border-gray-900 mt-6 bg-gray-950/40 p-3 rounded-lg border border-gray-900/50">
-                    <ChallengeBox
-                      challenge={lab.challenge}
-                      onChallengeSolved={handleChallengeSolved}
-                      completed={isChallengeCompleted}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 2: STEP-BY-STEP SOLUTION & WALKTHROUGH GUIDE (Tab requested by user) */}
-              {activeSidebarTab === 'guide' && (
-                <div className="space-y-4">
-                  
-                  {/* High level contextual brief description */}
-                  <div className="bg-emerald-950/10 p-3.5 rounded-lg border border-emerald-500/20 font-mono text-[11px]">
-                    <span className="text-[9.5px] uppercase font-black text-[#00ff88] block mb-1 tracking-wider flex items-center gap-1">
-                      <BookOpen className="w-3.5 h-3.5 text-blue-400" />
-                      ACADEMY RANGE LAB MANUAL:
-                    </span>
-                    <p className="text-gray-300 font-sans leading-relaxed text-[11.5px]">
-                      {lab.description}
-                    </p>
-                  </div>
-
-                  <div className="space-y-3.5">
-                    <h3 className="font-mono text-[10PX] uppercase text-[#00ff88] font-bold block select-none tracking-wider">
-                      WALKTHROUGH STEP-BY-STEP SOLUTION GUIDE:
-                    </h3>
-
-                    {activeTasks.map((t, idx) => {
-                      const { hint, step } = getTaskHintAndSolution(lab.id, t.id, t);
-                      const isFirstUnsolved = !t.completed && (idx === 0 || activeTasks[idx-1].completed);
-
-                      return (
-                        <div 
-                          key={t.id} 
-                          className={`relative rounded-lg p-3 bg-black/40 border transition-all
-                            ${t.completed 
-                              ? 'border-emerald-500/20 opacity-70 bg-emerald-950/5' 
-                              : isFirstUnsolved 
-                                ? 'border-[#00ff88] ring-1 ring-[#00ff88]/30 shadow-md shadow-[#00ff88]/5 bg-emerald-950/5' 
-                                : 'border-gray-900 opacity-80'
-                            }`}
-                        >
-                          
-                          {/* Flag indicating next step inline */}
-                          {isFirstUnsolved && (
-                            <span className="absolute -top-2 right-3 px-2 py-0.5 bg-[#00ff88] text-black font-mono font-black text-[8px] rounded uppercase tracking-widest leading-none shadow shadow-[#00ff88]/30">
-                              NEXT ACTION ITEM
-                            </span>
-                          )}
-
-                          <div className="flex items-center gap-1.5 font-mono mb-2">
-                            <span className="text-[#00ff88] font-bold text-xs font-mono">STEP_0{t.id}:</span>
-                            <span className="text-gray-400 font-bold text-[11px] truncate">{t.title}</span>
+                  {!task.completed && (
+                    <div className="space-y-3 bg-gray-900/40 p-2.5 rounded border border-gray-900">
+                      <div className="space-y-1">
+                        <span className="text-[9px] text-[#00ff88] font-mono font-bold uppercase tracking-widest block">Instruction</span>
+                        <p className="text-gray-300 text-[11px] font-sans leading-relaxed">{hint}</p>
+                      </div>
+                      
+                      <div className="pt-2 border-t border-gray-850 space-y-1.5">
+                        <span className="text-[9px] text-cyan-400 font-mono font-bold uppercase tracking-widest block">Action Loop</span>
+                        <div className="bg-black/60 p-2 rounded font-mono text-[10px] text-gray-400 border border-gray-950 group">
+                          {step}
+                          <div className="mt-2 flex justify-end">
+                            <button
+                              onClick={() => {
+                                const rawMatch = step.match(/'([^']+)'/);
+                                if (rawMatch?.[1]) {
+                                  navigator.clipboard.writeText(rawMatch[1]);
+                                  toast.success(`Copied: ${rawMatch[1]}`);
+                                }
+                              }}
+                              className="text-[8px] bg-gray-900 hover:bg-gray-800 px-2 py-1 rounded text-gray-400 hover:text-white border border-gray-800"
+                            >
+                              COPY_CMD
+                            </button>
                           </div>
-
-                          <div className="space-y-3 font-sans text-xs">
-                            <div className="text-gray-300 leading-relaxed text-[11px]">
-                              {t.description}
-                            </div>
-
-                            {/* Objective target command box with Instant Load action */}
-                            <div className="bg-black/70 p-2.5 rounded border border-gray-950 font-mono text-[11px] space-y-1.5 relative">
-                              <span className="text-[8.5px] text-gray-500 font-black block uppercase tracking-wider">// COPY_COMMAND & RUN IN KALI COSOLE:</span>
-                              <div className="flex items-center justify-between gap-1.5 bg-black/40 p-1.5 px-2 rounded border border-gray-900">
-                                <code className="text-[#00ff88] select-all truncate text-[10.5px] font-mono leading-none py-0.5">{step}</code>
-                                <button
-                                  onClick={() => handleCopyCommandText(step, t.id)}
-                                  className="text-gray-400 hover:text-white shrink-0 p-1 hover:bg-gray-850 rounded border border-gray-900 hover:border-gray-850 transition-colors"
-                                  title="Copy text code payload to clipboard"
-                                >
-                                  {copiedIndex === t.id ? (
-                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                  ) : (
-                                    <Copy className="w-3.5 h-3.5" />
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Solution walkthrough summary list */}
-                            <div className="bg-emerald-950/5 p-2 rounded border border-emerald-900/10 py-2 font-sans space-y-1">
-                              <span className="text-[8.5px] font-bold text-blue-400 font-mono block uppercase tracking-wider">// EXPLAINER & OBJECTIVE SOLUTION:</span>
-                              <p className="text-gray-400 text-[10.5px] leading-relaxed">
-                                {hint}
-                              </p>
-                            </div>
-                          </div>
-
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
 
+                      <TaskRenderer 
+                        task={task} 
+                        onComplete={() => handleTaskSolved(task.id)} 
+                        disabled={isLabFullyCompleted}
+                      />
+                    </div>
+                  )}
+
+                  {isHintExpanded && (
+                    <div className="bg-cyan-950/20 border border-cyan-500/20 p-2 rounded font-mono text-[10px] text-cyan-200">
+                      // {hint}
+                    </div>
+                  )}
                 </div>
-              )}
-
-            </div>
-
+              );
+            })}
           </div>
-
         </div>
-      )}
+
+        {/* Global challenge Flag submitting form (Bottom Fixed) */}
+        <div className="shrink-0 pt-4 border-t border-gray-900">
+          <ChallengeBox
+            challenge={lab.challenge}
+            onChallengeSolved={handleChallengeSolved}
+            completed={isChallengeCompleted}
+          />
+        </div>
+      </div>
 
       {/* Interactive celebratory success screen popup */}
       <CompletionModal
@@ -729,8 +410,6 @@ export const LabContainer: React.FC<LabContainerProps> = ({ lab, onClose }) => {
         challengeXP={activeLab.challenge?.rewardXP || lab.challenge?.rewardXP || 200}
         badgeName={activeLab.badgeName || lab.badgeName}
       />
-
     </div>
   );
 };
-
